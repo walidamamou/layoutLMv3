@@ -89,12 +89,34 @@ if __name__ == '__main__':
 
     words, bboxes, ner_tags, image_path = [], [], [], []
     for image, rows in images.items():
-        words.append([row.split('\t')[0].replace('\n', '')
-                     for row in files['train'][rows[0]:rows[-1]+1]])
-        ner_tags.append([row.split('\t')[1].replace('\n', '')
-                        for row in files['train'][rows[0]:rows[-1]+1]])
-        bboxes.append([box.split('\t')[1].replace('\n', '')
-                      for box in files['train_box'][rows[0]:rows[-1]+1]])
+        # creating list of words and add it to the main words list 
+        words_aux = []
+        for row in files["train"][rows[0] : rows[-1] + 1]:
+            try :
+                row.split("\t")[1]
+                words_aux.append(row.split("\t")[0].replace("\n", ""))
+            except :
+                traceback.print_exc()
+        words.append(words_aux)
+        
+        # creating list of ner_tags and add it to the main ner_tags list
+        ner_tags_aux = []
+        for row in files['train'][rows[0]:rows[-1]+1]:
+            try:
+                ner_tags_aux.append(row.split('\t')[1].replace('\n', ''))
+            except:
+                traceback.print_exc()
+        ner_tags.append(ner_tags_aux)
+        
+        # creating list of bboxs and add it to the main bboxs list
+        bboxes_aux = []
+        for box in files['train_box'][rows[0]:rows[-1]+1]:
+            try:
+                bboxes_aux.append(box.split('\t')[1].replace('\n', ''))
+            except:
+                traceback.print_exc()
+        bboxes.append(bboxes_aux)
+        
         if zip_dir_name:
             image_path.append(f"/content/data/{zip_dir_name}\\{image}")
         else:
