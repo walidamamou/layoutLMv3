@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import gc
 import argparse
 from datasets.features import ClassLabel
 from transformers import AutoProcessor
@@ -126,13 +127,18 @@ if __name__ == '__main__':
     id2label = {v: k for v, k in enumerate(labels)}
     label2id = {k: v for v, k in enumerate(labels)}
 
-    dataset_dict = {
-        'id': range(len(words)),
-        'tokens': words,
-        'bboxes': [[list(map(int, bbox.split())) for bbox in doc] for doc in bboxes],
-        'ner_tags': [[label2id[tag] for tag in ner_tag] for ner_tag in ner_tags],
-        'image': [Image.open(path).convert("RGB") for path in image_path]
-    }
+    del files
+    gc.collect()
+
+    dataset_dict = { }
+    dataset_dict["id"]       = range(len(words))
+    dataset_dict["tokens"]   = words
+    del words
+    dataset_dict["ner_tags"] = [[label2id[tag] for tag in ner_tag] for ner_tag in ner_tags]    
+    del ner_tags
+    dataset_dict["bboxes"]   = [[list(map(int, bbox.split())) for bbox in doc] for doc in bboxes]
+    dataset_dict["image"]    = [Image.open(path).convert("RGB") for path in image_path]
+    del bboxes
 
     #raw features
     features = Features({
@@ -145,6 +151,10 @@ if __name__ == '__main__':
 
     full_data_set = Dataset.from_dict(dataset_dict, features=features)
     dataset = full_data_set.train_test_split(test_size=TEST_SIZE)
+
+    del dataset_dict
+    del full_data_set
+    gc.collect()
     dataset["train"] = dataset["train"].filter(filter_out_unannotated)
     processor = AutoProcessor.from_pretrained(
         "microsoft/layoutlmv3-base", apply_ocr=False)
